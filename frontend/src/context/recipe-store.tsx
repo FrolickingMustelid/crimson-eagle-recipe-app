@@ -26,6 +26,7 @@ type RecipeState = {
     userState: UserState,
     setUserState: (userState: UserState) => void,
     fetchRecipes: () => void,
+    fetchBookmarkedRecipes: () => void,
     fetchRecipe: (id: number) => void,
     setQuery: (query: string) => void,
     setFilter: (filter: Tag[]) => void,
@@ -71,6 +72,48 @@ const useRecipeStore = create<RecipeState>((set, get) => ({
 
             if (!reload) return
         }
+
+        // debounce
+        const lastUpdate = get().lastUpdate
+        if (get().isLoading && lastUpdate && Date.now() - lastUpdate < 200)
+            return
+
+        set({
+            isLoading: true,
+            lastUpdate: Date.now()
+        })
+		
+        const fetching = (userState.isLoggedIn) ? fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${ userState.token }`,
+            },
+            credentials: 'include',
+        }) : fetch(url)
+
+        // TODO error handling
+        fetching
+            .then(res => {
+                if (!res.ok) throw new Error("Status not 200")
+                else return res.json()
+            })
+            .then((res: Pagination<Recipe>) => set({
+                recipes: res.records,
+                lastUrl: `${ url }|${ userState.token }|${ Date.now() }`,
+            }))
+            .catch(err => {
+                set({
+                    lastUrl: null,
+                })
+                console.log(err)
+            })
+            .finally(() => {
+                set({ isLoading: false })
+            })
+    },
+    fetchBookmarkedRecipes: async () => {
+        const userState = get().userState
+
+        const url = `${ process.env.apiUrl }/bookmarks?page=1&per_page=12`
 
         // debounce
         const lastUpdate = get().lastUpdate

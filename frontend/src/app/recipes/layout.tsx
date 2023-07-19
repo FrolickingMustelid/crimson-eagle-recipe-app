@@ -32,7 +32,7 @@ const RecipeLayout = ({ children }: { children: ReactNode }) => {
 				<SearchBarWithDebounce onSearch={ onSearch } />
 				{ userState.isLoggedIn && (
 					<>
-					<Link href="/bookmarked"
+					<Link href="/recipes/bookmarked"
 						className="flex justify-between items-center px-4 py-5 h-6 w-40 bg-red-500 rounded-2xl text-white"            
 					>
 						<Icon icon="basil:bookmark-solid" className="w-7 h-7" />
